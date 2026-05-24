@@ -4,6 +4,7 @@ SauceDemo login smoke tests.
 TC-SMOKE-01: Valid login with standard_user.
 TC-SMOKE-02: Locked user cannot log in.
 TC-SMOKE-03: Invalid credentials cannot log in.
+TC-SMOKE-04: Username only, password empty.
 """
 
 from playwright.sync_api import Page, expect
@@ -90,3 +91,24 @@ def test_tc_smoke_03_invalid_credentials_cannot_login(page: Page) -> None:
     error_banner = page.locator('[data-test="error"]')
     expect(error_banner).to_be_visible()
     expect(error_banner).to_contain_text("Username and password do not match")
+
+
+def test_tc_smoke_04_username_only_password_empty(page: Page) -> None:
+    # --- Arrange: open the login page ---
+    page.goto(LOGIN_URL)
+
+    username = page.locator('[data-test="username"]')
+    password = page.locator('[data-test="password"]')
+    login_button = page.locator('[data-test="login-button"]')
+
+    # --- Act: submit username only, leave password empty ---
+    username.fill("standard_user")
+    password.fill("")
+    login_button.click()
+
+    # --- Assert: remain on login page with password required error ---
+    expect(page).to_have_url(LOGIN_URL)
+
+    error_banner = page.locator('[data-test="error"]')
+    expect(error_banner).to_be_visible()
+    expect(error_banner).to_contain_text("Password is required")
