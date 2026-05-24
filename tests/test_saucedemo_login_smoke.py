@@ -1,13 +1,15 @@
 """
-TC-SMOKE-01: Valid login with standard_user (SauceDemo).
+SauceDemo login smoke tests.
 
-Test case: P-01 — confirm a valid user reaches the product inventory after login.
+TC-SMOKE-01: Valid login with standard_user.
+TC-SMOKE-02: Locked user cannot log in.
 """
 
 from playwright.sync_api import Page, expect
 
 LOGIN_URL = "https://www.saucedemo.com/"
 VALID_USERNAME = "standard_user"
+LOCKED_USERNAME = "locked_out_user"
 VALID_PASSWORD = "secret_sauce"
 
 
@@ -43,3 +45,26 @@ def test_tc_smoke_01_valid_login_standard_user(page: Page) -> None:
 
     # No login error banner after successful sign-in
     expect(page.locator('[data-test="error"]')).to_have_count(0)
+
+
+def test_tc_smoke_02_locked_out_user_cannot_login(page: Page) -> None:
+    # --- Arrange: open the login page ---
+    page.goto(LOGIN_URL)
+
+    username = page.locator('[data-test="username"]')
+    password = page.locator('[data-test="password"]')
+    login_button = page.locator('[data-test="login-button"]')
+
+    # --- Act: attempt login with a locked account ---
+    username.fill(LOCKED_USERNAME)
+    password.fill(VALID_PASSWORD)
+    login_button.click()
+
+    # --- Assert: remain on login page with locked-out error ---
+    expect(page).to_have_url(LOGIN_URL)
+    expect(username).to_be_visible()
+    expect(password).to_be_visible()
+
+    error_banner = page.locator('[data-test="error"]')
+    expect(error_banner).to_be_visible()
+    expect(error_banner).to_contain_text("locked out")
